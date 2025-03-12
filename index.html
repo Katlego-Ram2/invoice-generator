@@ -68,45 +68,54 @@
             font-size: 16px;
         }
         .action-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .action-buttons button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-        .action-buttons button:hover {
-            background-color: #45a049;
-            transform: scale(1.05);
-        }
-        .action-buttons button:active {
-            background-color: #388e3c;
-            transform: scale(0.98);
-        }
-        #invoiceTable td, #invoiceTable th {
-            word-wrap: break-word;
-            white-space: normal;
-        }
-        #invoiceTable td:nth-child(1) {
-            width: 40%;
-        }
-        #invoiceTable td:nth-child(2) {
-            width: 20%;
-        }
-        #invoiceTable td:nth-child(3) {
-            width: 10%;
-        }
-        #invoiceTable td:nth-child(4) {
-            width: 20%;
-        }
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .action-buttons button {
+        background-color: #4CAF50; /* Green background */
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .action-buttons button:hover {
+        background-color: #45a049; /* Darker green on hover */
+        transform: scale(1.05); /* Slightly enlarge the button */
+    }
+
+    .action-buttons button:active {
+        background-color: #388e3c; /* Even darker green when clicked */
+        transform: scale(0.98); /* Slight shrink on click */
+    }
+    /* Make sure table columns are correctly sized */
+#invoiceTable td, #invoiceTable th {
+    word-wrap: break-word; /* Allows text to wrap */
+    white-space: normal;   /* Ensures content breaks onto the next line */
+}
+
+#invoiceTable td:nth-child(1) {
+    width: 40%;  /* Adjust column width as needed */
+}
+
+#invoiceTable td:nth-child(2) {
+    width: 20%;  /* Price column */
+}
+
+#invoiceTable td:nth-child(3) {
+    width: 10%;  /* Quantity column */
+}
+
+#invoiceTable td:nth-child(4) {
+    width: 20%;  /* Total column */
+}
+
     </style>
 </head>
 <body>
@@ -130,9 +139,6 @@
             <p><strong>Bill To:</strong><br> 
             <input type="text" id="billTo" value="Tau close">
             </p>
-            <p><strong>Account No:</strong><br>
-            <input type="text" id="accountNo" value="9384097495 ABSA MR S MBHEWE">
-            </p>
         </div>
     </div>
 
@@ -149,6 +155,13 @@
             <tr>
                 <td><input type="text" value="Tau Close"></td>
                 <td><input type="number" value="350" class="price" oninput="calculateTotal()"></td>
+                <td><input type="number" value="1" class="qty" oninput="calculateTotal()"></td>
+                <td class="total-cell"></td>
+            </tr>
+            
+            <tr>
+                <td><input type="text" value="Fixed leaking water meter and PVC elbow leakage - Unit A240"></td>
+                <td><input type="number" value="850" class="price" oninput="calculateTotal()"></td>
                 <td><input type="number" value="1" class="qty" oninput="calculateTotal()"></td>
                 <td class="total-cell"></td>
             </tr>
@@ -170,10 +183,10 @@
         <input type="text" id="signature" placeholder="Enter your signature">
     </div>
 </div>
-
 <div class="action-buttons">
-    <button onclick="addItem()">Add Item</button>
-    <button onclick="removeItem()">Remove Item</button>
+        <button onclick="addItem()">Add Item</button>
+        <button onclick="removeItem()">Remove Item</button>
+    </div>
 </div>
 <button onclick="generatePDF()">Download PDF</button>
 
@@ -195,39 +208,149 @@
         document.getElementById("total").textContent = "R " + subtotal.toFixed(2);
     }
 
+    function removeItem() {
+        let table = document.querySelector("#invoiceTable tbody");
+        if (table.rows.length > 1) { // Ensure at least one row remains
+            table.deleteRow(table.rows.length - 1);
+            calculateTotal(); // Recalculate total after removing a row
+        }
+    }
     function addItem() {
         let table = document.querySelector("#invoiceTable tbody");
-        let newRow = table.insertRow();
+        let newRow = document.createElement("tr");
 
-        newRow.innerHTML = `
+        newRow.innerHTML = 
             <td><input type="text" value="New Item"></td>
             <td><input type="number" value="0" class="price" oninput="calculateTotal()"></td>
             <td><input type="number" value="1" class="qty" oninput="calculateTotal()"></td>
             <td class="total-cell">R 0.00</td>
-        `;
-        calculateTotal();
-    }
+        ;
 
-    function removeItem() {
-        let table = document.querySelector("#invoiceTable tbody");
-        if (table.rows.length > 0) {
-            table.deleteRow(-1);
-            calculateTotal();
-        }
+        table.appendChild(newRow);
+        calculateTotal(); // Recalculate total after adding a row
     }
-
     function generatePDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-        let accountNo = document.getElementById("accountNo").value;
-        doc.text(`Account No: ${accountNo}`, 10, 60);
+    let invoiceNo = document.getElementById("invoiceNo").value;
+    let invoiceDate = document.getElementById("invoiceDate").value;
+    let dueDate = document.getElementById("dueDate").value;
+    let fromName = document.getElementById("fromName").value;
+    let fromContact = document.getElementById("fromContact").value;
+    let billTo = document.getElementById("billTo").value;
+    let signature = document.getElementById("signature").value;
 
-        doc.save("Invoice.pdf");
-    }
+    // Header with background color
+    doc.setFillColor(0, 51, 102); // Dark blue
+    doc.rect(0, 0, 210, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.text("Invoice", 105, 15, null, null, 'center');
 
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+
+    // Business & Invoice Details
+    doc.text(From: ${fromName}, 10, 40);
+    doc.text(Contact: ${fromContact}, 10, 45);
+    doc.text(Bill To: ${billTo}, 10, 50);
+
+    doc.setFont("helvetica", "bold");
+    doc.text(Invoice No: ${invoiceNo}, 150, 40);
+    doc.text(Invoice Date: ${invoiceDate}, 150, 45);
+    doc.text(Due Date: ${dueDate}, 150, 50);
+    doc.setFont("helvetica", "normal");
+
+    // Line separator
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(0, 51, 102);
+    doc.line(10, 55, 200, 55);
+
+    // Table Header with background color
+    doc.setFillColor(200, 200, 200);
+    doc.rect(10, 60, 190, 10, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Item Name", 12, 67);
+    doc.text("Price", 105, 67);
+    doc.text("Qty", 145, 67);
+    doc.text("Total", 175, 67);
+
+    // Table Content
+    let rows = document.querySelectorAll("#invoiceTable tbody tr");
+    let yPosition = 75;
+    doc.setFont("helvetica", "normal");
+
+    rows.forEach((row, index) => {
+        let item = row.cells[0].querySelector("input").value;
+        let price = row.cells[1].querySelector("input").value;
+        let qty = row.cells[2].querySelector("input").value;
+        let total = row.cells[3].textContent;
+
+        // Wrap the item name if it's too long
+        let itemNameLines = doc.splitTextToSize(item, 90);  // Adjust width to fit the table column
+
+        // Alternate row background color
+        if (index % 2 === 0) {
+            doc.setFillColor(240, 240, 240);
+            doc.rect(10, yPosition - 5, 190, 10, 'F');
+        }
+
+        // Add item name (wrapped if necessary)
+        doc.setTextColor(0, 0, 0);
+        doc.text(itemNameLines, 12, yPosition);
+
+        // Add price, qty, and total
+        doc.text(price, 105, yPosition);
+        doc.text(qty, 145, yPosition);
+        doc.text(total, 175, yPosition);
+
+        // Increase yPosition for next row with extra spacing between items (increased spacing)
+        yPosition += (itemNameLines.length * 5) + 5; // Increase by 5 for additional space
+    });
+
+    // Total Section with highlight
+    doc.setFont("helvetica", "bold");
+    doc.setFillColor(0, 51, 102);
+    doc.setTextColor(255, 255, 255);
+    doc.rect(130, yPosition + 5, 70, 10, 'F');
+    doc.text("Subtotal:", 135, yPosition + 12);
+    doc.text(document.getElementById("subtotal").textContent, 175, yPosition + 12);
+
+    doc.rect(130, yPosition + 15, 70, 10, 'F');
+    doc.text("Total:", 135, yPosition + 22);
+    doc.text(document.getElementById("total").textContent, 175, yPosition + 22);
+
+    // Reset text color for signature
+    doc.setTextColor(0, 0, 0);
+    
+    // Signature Section
+    yPosition += 40;
+    doc.text("Signature:", 10, yPosition);
+    doc.line(10, yPosition + 5, 150, yPosition + 5);
+
+    // Apply Edwardian Script ITC font to the signature
+    doc.setFont("EdwardianScriptITC.ttf", "EdwardianScriptITC", "normal");
+    doc.setFontSize(15);  // Set font size to match a signature-like look
+    doc.text(signature, 10, yPosition + 15);
+
+    // Footer
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Thank you for your business!", 10, 280);
+    doc.text(Generated on: ${invoiceDate}, 150, 280);
+
+    // Save PDF with invoice number as filename
+    doc.save(${invoiceNo}.pdf);
+}
+
+
+
+    // Automatically calculate the total when the page loads
     window.onload = calculateTotal;
 </script>
-
 </body>
 </html>
