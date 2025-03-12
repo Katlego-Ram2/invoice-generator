@@ -311,15 +311,7 @@
         // Increase yPosition for next row with extra spacing between items (increased spacing)
         yPosition += (itemNameLines.length * 5) + 5; // Increase by 5 for additional space
     });
-  let accountNumber = "9384097495";  
-    let bank = "ABSA";  
-    let accountHolder = "MR S MBHEWE"; 
 
-
-
-        doc.text(`Bank: ${bank}`, 10, 55);
-    doc.text(`Account No: ${accountNumber}`, 10, 60);
-    doc.text(`Account Holder: ${accountHolder}`, 10, 65);
         
     // Total Section with highlight
     doc.setFont("helvetica", "bold");
@@ -347,9 +339,9 @@
     doc.text(signature, 10, yPosition + 15);
 
     // Footer
-    doc.setFontSize(10);
+    doc.setFontSize(12);
     doc.setTextColor(100, 100, 100);
-    doc.text("", 10, 280);
+    doc.text("AccountNumber :9384097495  bank: ABSA  Account Holder : MR S MBHEWE ", 10, 280);
     doc.text(`Generated on: ${invoiceDate}`, 150, 280);
 
     // Save PDF with invoice number as filename
